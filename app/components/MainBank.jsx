@@ -12,7 +12,7 @@ class MainBank extends React.Component {
   constructor(props) {
     super(props);
     // accounts format= [balance, password, account#, customerId, owner1, owner2]
-    // currentOwner format = [name, index]
+    // currentOwner format = [name, index, customerId, acct#s]  note: acct #'s only added if transfer clicked
     this.state = {
       accounts: [],
       newAccount: false,
@@ -25,7 +25,8 @@ class MainBank extends React.Component {
       inputPassword: "",
       inputForeign: 0,
       inputTransferAccount: "",
-      currency: null,
+      inputTransferFromAccount: "0",
+      currency: "Canadian",
       showCurrencyConverter: false,
       orderAmount: 0,
       isTransfer: "",
@@ -41,6 +42,7 @@ class MainBank extends React.Component {
     this.handleTransfer = this.handleTransfer.bind(this);
     this.handleButton = this.handleButton.bind(this);
     this.handleNewAccount = this.handleNewAccount.bind(this);
+    this.handleLogout = this.handleLogout.bind(this);
   }
 
   componentDidMount() {
@@ -61,48 +63,25 @@ class MainBank extends React.Component {
 
   handleChange(evt) {
     // clean this up using name=evt.target = name in State
-    console.log("changed", evt.target.value);
-    console.log(evt.target.name);
-    if (evt.target.name == "name") {
-      this.setState({ inputName: evt.target.value });
-    } else if (evt.target.name == "name2") {
-      this.setState({ inputName2: evt.target.value });
-    } else if (evt.target.name == "customerId") {
-      this.setState({ inputCustomerId: evt.target.value });
-    } else if (evt.target.name == "inputCustomerId") {
-      this.setState({ inputCustomerId: evt.target.value });
-    } else if (evt.target.name == "password") {
-      this.setState({ inputPassword: evt.target.value });
-    } else if (evt.target.name == "transfer") {
-      this.setState({ inputTransferAccount: evt.target.value });
-    } else if (evt.target.name == "depositWd") {
-      if (!Number(parseFloat(evt.target.value))) {
-        alert("Your amount must be a number");
-        this.setState({ orderAmount: 0 });
-      }
-      this.setState({ orderAmount: evt.target.value });
-    } else if (evt.target.name == "foreign") {
-      if (!Number(parseFloat(evt.target.value))) {
-        alert("Your amount must be a number");
-        this.setState({ orderAmount: 0 });
-      }
-      this.setState({ inputForeign: evt.target.value });
-    }
+
+    console.log("changed", evt.target.name, evt.target.value);
+    //console.log(evt.target.name);
+    this.setState({ [evt.target.name]: evt.target.value });
   }
 
   handleNewAccount(e) {
     console.log("button pressed", e.target.id);
     var tempVal = 0;
-    var goodName = false;
     var accountNames;
-    // var goodAccountNum = 0;
+    var customerId = 0; // used to find highest current number to select next customerId #
     var goodId;
+    var goodName = false;
     var goodPassword;
 
     // format for accounts is [balance, password, account#, customerId, owner1, owner2]
-    //  error checking to ensure no duplicate accounts
+    //  error checking to ensure entered customer id matches associated password
     if (this.state.inputCustomerId) {
-      // if user entered customerId
+      // if user entered customerId to create additional account for existing customer:
       this.state.accounts.forEach((account, index) => {
         // get this account and check password
         if (
@@ -111,30 +90,34 @@ class MainBank extends React.Component {
         ) {
           goodName = true;
           goodPassword = this.state.inputPassword;
-          goodId = this.state.inputCustomerId;
-          accountNames = [account[4], account[5]];
+          goodId = this.state.inputCustomerId; // record verified customer Id
+          accountNames = [account[4]];
+          if (account[5]) accountNames.push(account[5]);
         }
       });
     } else {
-      goodName = true; // to execute next section without customerId
+      goodName = true; // if not existing customer-proceed to next stage
+      accountNames = [this.state.inputName, this.state.inputName2];
     } // ie. goodName could be false if password above failed,
-    // else will send error message below
+    // and thus will skip down to send error message below
     if (goodName) {
-      var customerId; // used to find highest current number to select next
-      //let accountNum; //  "  "      "    "    "      "
       let goodAccountNum = 0;
       let temp = [...this.state.accounts];
       if (goodId) {
-        customerId = goodId;
+        // only set if verified password above
+        customerId = goodId; // load in customerId from above (if found)
       }
-      // use existing customerId or find largest and add 1
+      // loop through accounts to get highest account #, add 1 and use here (same if no customer # yet)
       this.state.accounts.forEach((account, index) => {
-        // get the largest customerID if we didn't get one already
+        // get the largest customerID if we didn't get one already from above
         if (!goodId && account[3] >= customerId) {
+          // if we already have one, skip
           customerId = account[3] + 1;
-        }
+          console.log("customer id could be ", customerId);
+        } // format for accounts is [balance, password, account#, customerId, owner1, owner2]
         if (account[2] >= goodAccountNum) {
-          goodAccountNum = account[2] + 1;
+          // either way, find the next biggest account num
+          goodAccountNum = account[2] + 1; // then add one to use for this account
         }
       });
 
@@ -147,31 +130,21 @@ class MainBank extends React.Component {
         customerId
       );
 
-      if (this.state.name2 != "") {
-        temp.push([
-          0,
-          this.state.inputPassword,
-          goodAccountNum, // next account number
-          customerId, // next customerId
-          this.state.inputName,
-          this.state.inputName2 // saved Joint account
-        ]);
-        tempLength = temp.length; // used to store index of current Customer
-      } else {
-        temp.push([
-          0,
-          this.state.inputPassword,
-          goodAccountNum,
-          customerId,
-          accountNames
-        ]);
-        tempLength = temp.length; // used to store index of current Customer
-      }
+      // update temp array then use to set state
+      temp.push([
+        0,
+        this.state.inputPassword,
+        goodAccountNum, // next account number
+        customerId, // next customerId
+        accountNames
+      ]);
+      tempLength = temp.length; // used to store index of current Customer
+
       console.log("Opening new bank account", accountNames);
       this.setState(
         {
           accounts: [...temp],
-          currentOwner: [this.state.inputName, tempLength - 1]
+          currentOwner: [this.state.inputName, tempLength - 1, customerId]
         },
         () =>
           alert(
@@ -189,84 +162,159 @@ class MainBank extends React.Component {
     if (!Number(this.state.orderAmount)) {
       alert("Your amount must be a number");
       this.setState({ orderAmount: 0 }); //
+    } else {
+      let temp = [...this.state.accounts];
+
+      console.log("copied state to update account"); //, temp);
+      let thisIndex = this.state.currentOwner[1];
+      // console.log("Index of CurrentOwner was set at pos[1] ", thisIndex);
+
+      temp[thisIndex][0] = [
+        parseFloat(temp[thisIndex][0]) + parseFloat(this.state.orderAmount)
+      ];
+      //console.log("updated the account in temp arr with new balance, next setState with temp ", temp);
+      this.setState({ accounts: [...temp], orderAmount: 0 });
     }
-    let temp = [...this.state.accounts];
-
-    console.log("copied state to update account", temp);
-    let thisIndex = this.state.currentOwner[1];
-    console.log("Index of CurrentOwner was set at pos[1] ", thisIndex);
-
-    temp[thisIndex] = [
-      parseFloat(temp[thisIndex][0]) + parseFloat(this.state.orderAmount),
-      temp[thisIndex][1],
-      temp[thisIndex][2]
-    ];
-    console.log(
-      "updated the account in temp arry with new balance,next setState with temp ",
-      temp
-    );
-    this.setState({ accounts: [...temp], orderAmount: 0 });
   }
   handleTransfer(evt) {
     console.log(
-      "Transfer of " +
+      "Transfer of $" +
         this.state.orderAmount +
         " to account:" +
         this.state.inputTransferAccount
     );
+    // validate inputs:
     if (
       !Number(parseFloat(this.state.orderAmount)) ||
       !this.state.orderAmount
     ) {
       alert("Please enter transfer amount (amount must be a number)");
       this.setState({ orderAmount: 0 }); //
-    } else if (!this.state.inputTransferAccount) {
-      alert("Must Enter valid account number ");
+    } else if (
+      !Number(parseFloat(this.state.inputTransferAccount)) ||
+      !this.state.inputTransferAccount
+    ) {
+      alert("Must Enter valid account number 1");
+      this.setState({ inputTransferAccount: 0 });
+    } else if (
+      //this.state.inputTransferFromAccount != null &&
+      !this.state.inputTransferFromAccount //!Number(parseFloat(this.state.inputTransferFromAccount))
+    ) {
+      alert("Must Enter your valid account number To transfer from");
+      this.setState({ inputTransferFromAccount: 0 });
     } else {
-      // search for this account owner to get index:
-      var transferAccountIndex;
-      this.state.accounts.forEach((account, index) => {
-        if (
-          this.state.accounts[index][2] == this.state.inputTransferAccount // ensure account number exists
-        ) {
-          transferAccountIndex = index;
-          console.log(
-            "found owner of account, Depositing ",
-            this.state.orderAmount
-          );
-        }
-      });
+      // search for this account owner  get index:
 
-      if (!transferAccountIndex) {
-        alert("Please enter valid account number");
-        this.setState({ inputTransferAccount: "" });
+      var transferTo = false; // will ensure to account exists
+      var transferToAccountIndex;
+      var transferFromAccountIndex;
+      var validatedAccountOwner;
+      var transferFromAccount = this.state.inputTransferFromAccount;
+      var transferToAccount = this.state.inputTransferAccount;
+      //if (transferFromAccount == 0) {
+      // if TranferFrom is empty - fill it in
+      // accounts format : [balance, password, account#, customerId, owner1, owner2]
+      //  transferFromAccount = this.state.currentOwner[3][0]; // use default account
+      //  transferFromAccountIndex = this.state.currentOwner[3][1]; // use default index
+      // }
+      // accounts format : [balance, password, account#, customerId, owner1, owner2]
+      //currentOwner format: name, index, custId, acct#
+      if (transferFromAccount > 0) {
+        this.state.accounts.forEach((account, index) => {
+          if (account[2] == transferToAccount) {
+            transferTo = true;
+            transferToAccountIndex = index; // got TransferTo index
+          }
+
+          if (account[2] == transferFromAccount) {
+            // find From account details
+            if (account[3] == this.state.currentOwner[2]) {
+              // ensure  From account owner matches current OwnerId
+
+              // currentOwner format = [name, index, customerId, [acct#s, index]]
+              transferFromAccountIndex = index;
+
+              console.log(
+                transferFromAccount,
+                transferFromAccountIndex,
+                "Confirmed owner of this account",
+                account.toString()
+              );
+              // let tempOtherAccount = [...this.state.currentOwner];
+              // tempOtherAccount.push([account[2], index]); // load up all account numbers(with index) for this owner
+              //  this.setState({ currentOwner: tempOtherAccount }); // save to currentOwner state
+              validatedAccountOwner = true; // currentOwner owns the other account
+              console.log(
+                transferFromAccountIndex,
+                "=From index, found owner of account, Depositing: $",
+                this.state.orderAmount
+              );
+            } else alert("Please only transfer from your own accounts");
+          }
+        });
+
+        console.log(
+          "transferFromAccountIndex",
+          transferFromAccountIndex,
+          transferToAccountIndex
+        );
+        // if (!validatedAccountOwner) {
+        //   alert(
+        //     "Must Enter valid account number-you can only transfer from your accounts Line 240 "
+        //   );
+        //   validatedAccountOwner = false;
+        //   this.setState({ inputTransferFromAccount: 0 });
+        // }
       } else {
+        // if no FromAccount set, use current account
+        // find index of To account in master accounts[]
+        this.state.accounts.forEach((account, index) => {
+          if (account[2] == transferToAccount) {
+            transferTo = true;
+            transferToAccountIndex = index; // got TransferTo index
+          }
+        });
+        transferFromAccount = this.state.currentOwner[3]; // use default account
+        transferFromAccountIndex = this.state.currentOwner[4]; // use default index
+        validatedAccountOwner = true;
+        console.log(
+          "transfer from this account",
+          transferFromAccount,
+          transferFromAccountIndex
+        );
+      }
+      if (transferFromAccountIndex == "null") {
+        alert("Please enter valid account number 4", transferFromAccount);
+        this.setState({ inputTransferAccount: "0" });
+      } else if (validatedAccountOwner) {
+        // only update state if user owns transferFrom account
         var temp = [...this.state.accounts];
 
         console.log("copied state to update account", temp);
-        let thisIndex = this.state.currentOwner[1];
-        console.log(
-          "Now decrese currentOwner account and do transfer of ",
-          this.state.orderAmount
-        );
+
+        // let thisIndex = this.state.currentOwner[1]; // currentOwner format = [name, index, customerId, acct#y, indexy]]
+        //console.log("Now decrease From account and do transfer of ",this.state.orderAmount,"from",temp[transferFromAccountIndex],"to",temp[transferToAccountIndex]);
+        //
+        // this.state.currentOwner.forEach((item, index) => {
+        //   if (item[0] == this.state.inputTransferAccount) {
+        //     transferFromAccountIndex = index;
+        //   }
+        // });
+
+        // if (
+        //    this.state.accounts[thisIndex][2] ==
+        //    this.state.inputTransferFromAccount
+        //  ) {
+        //  }
         // accounts format : [balance, password, account#, customerId, owner1, owner2]
-        temp[thisIndex] = [
-          parseFloat(temp[thisIndex][0]) - parseFloat(this.state.orderAmount),
-          temp[thisIndex][1],
-          temp[thisIndex][2],
-          temp[thisIndex][3],
-          temp[thisIndex][4],
-          temp[thisIndex][5]
-        ];
-        temp[transferAccountIndex] = [
-          parseFloat(temp[transferAccountIndex][0]) +
-            parseFloat(this.state.orderAmount),
-          temp[transferAccountIndex][1],
-          temp[transferAccountIndex][2],
-          temp[transferAccountIndex][3],
-          temp[transferAccountIndex][4],
-          temp[transferAccountIndex][5]
-        ];
+        (temp[transferFromAccountIndex][0] = [
+          parseFloat(temp[transferFromAccountIndex][0]) -
+            parseFloat(this.state.orderAmount)
+        ]),
+          (temp[transferToAccountIndex][0] = [
+            parseFloat(temp[transferToAccountIndex][0]) +
+              parseFloat(this.state.orderAmount)
+          ]);
 
         console.log(
           "updated the account in temp arry with new balance,next setState with temp ",
@@ -276,7 +324,7 @@ class MainBank extends React.Component {
           "Transfer successful to account # " +
             this.state.inputTransferAccount +
             " account is now $" +
-            temp[transferAccountIndex][0]
+            temp[transferFromAccountIndex][0]
         );
         this.setState({
           accounts: [...temp],
@@ -286,7 +334,6 @@ class MainBank extends React.Component {
       }
     }
   }
-
   handleWithdrawl() {
     console.log("withdrawl of ", this.state.orderAmount);
     let temp = [...this.state.accounts];
@@ -377,6 +424,9 @@ class MainBank extends React.Component {
         // if no amount present, user selecting desired withdrawl currency
         this.setState({ currency: "Mexican Peso" });
       }
+    } else if (evt.target.id == "Ca") {
+      console.log("back to Canadian ", tempVal);
+      this.setState({ orderAmount: tempVal, currency: "Canadian" });
     } else if ((evt.target.id = "currencyConverter")) {
       this.setState({
         showCurrencyConverter: !this.state.showCurrencyConverter
@@ -391,12 +441,6 @@ class MainBank extends React.Component {
       // flag held in state will be set =false if login successful
       this.state.accounts.forEach((account, index) => {
         // check index 4 (and 5 for joint account) for account owner name
-        console.log(
-          "Compare ",
-          this.state.accounts[0][4],
-          this.state.inputName
-        );
-
         if (
           this.state.accounts[index][4] == this.state.inputName ||
           this.state.accounts[index][5] == this.state.inputName
@@ -409,13 +453,22 @@ class MainBank extends React.Component {
             // [index][1] is password // accounts format : [balance, password, account#, customerId, owner1, owner2]
             console.log("password passed login granted");
             this.setState(
-              { currentOwner: [this.state.inputName, index], flag: false },
+              // setting default account(currentOwner) to hold name, index in accounts[], and customerId
+              {
+                currentOwner: [
+                  //currentOwner format: name, index, custId, acct#, index, accty, indexy, ect
+                  this.state.inputName,
+                  index,
+                  this.state.accounts[index][3], // customerId
+
+                  this.state.accounts[index][2], // account #s
+                  index // with index of account on master accounts[]
+                ],
+                flag: false,
+                inputFromAccount: this.state.accounts[index][2] // holds transfer from account
+              },
               () => {
-                console.log(
-                  "successful login ",
-                  this.state.currentOwner[0],
-                  this.state.flag
-                );
+                console.log("successful login ", this.state.currentOwner[0]);
                 //return;
               }
             ); //Note currentOwner holds INDEX of this account in pos[1]
@@ -424,7 +477,7 @@ class MainBank extends React.Component {
             console.log("failed at password");
           }
         } else {
-          console.log("Not this userName");
+          //console.log("Not this userName");
         }
       }); // end of forEach
 
@@ -441,10 +494,21 @@ class MainBank extends React.Component {
       );
     }
   }
-
+  handleLogout(event) {
+    console.log("Logging out");
+    this.setState({
+      inputName: "",
+      inputPassword: "",
+      newAccount: false,
+      flag: true,
+      currentOwner: null
+    });
+  }
   render() {
     return (
-      <div>
+      <div ><center>
+    
+        
         <h1>Welcome to World Wide Bank Canada</h1>
 
         {!this.state.currentOwner ? (
@@ -457,7 +521,6 @@ class MainBank extends React.Component {
                 handleNewAccount={e => this.handleNewAccount(e)}
                 inputName={this.state.inputName}
                 inputName2={this.state.inputName2}
-                inputCustomerId={this.state.inputCustomerId}
                 inputCustomerId={this.state.inputCustomerId}
                 inputPassword={this.state.inputPassword}
                 newAccount={this.state.newAccount}
@@ -501,29 +564,23 @@ class MainBank extends React.Component {
               orderAmount={this.state.orderAmount}
               isTransfer={this.state.isTransfer}
               inputTransferAccount={this.state.inputTransferAccount}
+              inputTransferFromAccount={this.state.inputTransferFromAccount}
               inputAccount={this.state.inputAccount}
+              currency={this.state.currency}
+              showCurrencyConverter={this.state.showCurrencyConverter}
               handleChange={e => this.handleChange(e)}
               handleDeposit={e => this.handleDeposit(e)}
               handleTransfer={e => this.handleTransfer(e)}
               handleWithdrawl={e => this.handleWithdrawl(e)}
               handleSubmit={e => this.handleSubmit(e)}
               handleButton={e => this.handleButton(e)}
+              handleLogout={e => this.handleLogout(e)}
             />
-            {this.state.showCurrencyConverter ? (
-              <Converter
-                handleChange={e => this.handleChange(e)}
-                handleSubmit={e => this.handleSubmit(e)}
-                handleButton={e => this.handleButton(e)}
-                inputForiegn={this.state.inputForiegn}
-                currency={this.state.currency}
-              />
-            ) : (
-              <br />
-            )}
           </div>
         ) : (
           <br />
         )}
+        </center>
       </div>
     );
   }
