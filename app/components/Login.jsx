@@ -18,7 +18,7 @@ const Login = function(props) {
           Name:
           <input
             type="text"
-            name="name"
+            name="inputName"
             value={props.inputName}
             onChange={props.handleChange}
             minlength="4"
@@ -44,7 +44,7 @@ const Login = function(props) {
           Password:
           <input
             type="text"
-            name="password"
+            name="inputPassword"
             value={props.inputPassword}
             onChange={props.handleChange}
             minlength="1"

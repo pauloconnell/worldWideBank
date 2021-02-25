@@ -15,7 +15,7 @@ function NewAccount(props) {
           Name:
           <input
             type="text"
-            name="name"
+            name="inputName"
             value={props.inputName}
             onChange={props.handleChange}
             minlength="4"
@@ -27,7 +27,7 @@ function NewAccount(props) {
           Joint Account 2nd Name:(optional-new Accounts only)
           <input
             type="text"
-            name="name2"
+            name="inputName2"
             value={props.inputName2}
             onChange={props.handleChange}
             minlength="4"
@@ -39,7 +39,7 @@ function NewAccount(props) {
           Password:
           <input
             type="text"
-            name="password"
+            name="inputPassword"
             value={props.inputPassword}
             onChange={props.handleChange}
             minlength="1"
@@ -51,7 +51,7 @@ function NewAccount(props) {
           Existing Clients: Enter Customer Id (and existing password)
           <input
             type="text"
-            name="customerId"
+            name="inputCustomerId"
             value={props.inputCustomerId}
             onChange={props.handleChange}
             minlength="4"
