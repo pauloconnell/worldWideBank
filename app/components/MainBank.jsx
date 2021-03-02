@@ -51,11 +51,11 @@ class MainBank extends React.Component {
         // format for accounts is [balance, password, account#, customerId, owner1, owner2]
         [10, "a", "1", "1", "Paul", "Tara"],
         [12, "a", "3", "3", "Teagan"],
-        [100, "password", 1234, 777, "Stewie Griffin"],
-        [35000, "password", 2001, 504, "Glenn Quagmire"],
-        [7425, "password", 1010, 2, "Joe Swanson"],
-        [150, "password", 123, 123, "Peter Griffin"],
-        [15000, "password", 5500, 2, "Joe Swanson"]
+        [100, "a", 1234, 777, "Stewie Griffin"],
+        [35000, "a", 2001, 504, "Glenn Quagmire"],
+        [7425, "a", 1010, 2, "Joe Swanson"],
+        [150, "a", 123, 123, "Peter Griffin"],
+        [15000, "a", 5500, 2, "Joe Swanson"]
       ]
     });
   }
@@ -543,8 +543,10 @@ class MainBank extends React.Component {
               For Testing only:
               {this.state.accounts.map(item => (
                 <li key={item[1]}>
-                  {item[4]} {item[5] ? item[5] : null}
+                 Owner:{item[4]} Joint Owner:{item[5] ? item[5] : null}
                   <br />
+                  Customer ID# {item[3]}<br />
+                  Account # {item[2]}<br />
                   Password: {item[1]}
                 </li>
               ))}
