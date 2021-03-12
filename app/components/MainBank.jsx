@@ -2,7 +2,7 @@ const React = require("react");
 const Link = require("react-router-dom").Link;
 const ShowAccount = require("./ShowAccount");
 const Converter = require("./Converter");
-const Open = require("./Open");
+//const Open = require("./Open");
 const Login = require("./Login");
 const NewAccount = require("./NewAccount");
 //import "./app.css";
@@ -51,11 +51,11 @@ class MainBank extends React.Component {
         // format for accounts is [balance, password, account#, customerId, owner1, owner2]
         [10, "a", "1", "1", "Paul", "Tara"],
         [12, "a", "3", "3", "Teagan"],
-        [100, "a", 1234, 777, "Stewie Griffin"],
-        [35000, "a", 2001, 504, "Glenn Quagmire"],
-        [7425, "a", 1010, 2, "Joe Swanson"],
-        [150, "a", 123, 123, "Peter Griffin"],
-        [15000, "a", 5500, 2, "Joe Swanson"]
+        [100, "password", 1234, 777, "Stewie Griffin"],
+        [35000, "password", 2001, 504, "Glenn Quagmire"],
+        [7425, "password", 1010, 2, "Joe Swanson"],
+        [150, "password", 123, 123, "Peter Griffin"],
+        [15000, "password", 5500, 2, "Joe Swanson"]
       ]
     });
   }
@@ -506,82 +506,81 @@ class MainBank extends React.Component {
   }
   render() {
     return (
-      <div ><center>
-    
-        
-        <h1>Welcome to World Wide Bank Canada</h1>
+      <div>
+        <center>
+          <h1>Welcome to World Wide Bank Canada</h1>
 
-        {!this.state.currentOwner ? (
-          <div>
-            {this.state.newAccount ? (
-              <NewAccount
-                handleSubmit={e => this.handleSubmit(e)}
+          {!this.state.currentOwner ? (
+            <div>
+              {this.state.newAccount ? (
+                <NewAccount
+                  handleSubmit={e => this.handleSubmit(e)}
+                  handleChange={e => this.handleChange(e)}
+                  handleButton={e => this.handleButton(e)}
+                  handleNewAccount={e => this.handleNewAccount(e)}
+                  inputName={this.state.inputName}
+                  inputName2={this.state.inputName2}
+                  inputCustomerId={this.state.inputCustomerId}
+                  inputPassword={this.state.inputPassword}
+                  newAccount={this.state.newAccount}
+                />
+              ) : (
+                <Login
+                  handleSubmit={e => this.handleSubmit(e)}
+                  handleChange={e => this.handleChange(e)}
+                  handleButton={e => this.handleButton(e)}
+                  handleNewAccount={e => this.handleNewAccount(e)}
+                  inputName={this.state.inputName}
+                  inputName2={this.state.inputName2}
+                  inputPassword={this.state.inputPassword}
+                  newAccount={this.state.newAccount}
+                />
+              )}
+              Our Bank currently has {this.state.accounts.length} customers in
+              Canada
+              <ul>
+                For Testing only:
+                {this.state.accounts.map(item => (
+                  <li key={item[1]}>
+                    {item[4]} {item[5] ? item[5] : null}
+                    <br />
+                    Password: {item[1]}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <br />
+          )}
+          <br></br>
+          {this.state.currentOwner ? (
+            <div>
+              <ShowAccount
+                accounts={this.state.accounts}
+                accountAmount={
+                  this.state.accounts[this.state.currentOwner[1]][0]
+                }
+                accountName={this.state.currentOwner[0]}
+                thisAccount={this.state.accounts[this.state.currentOwner[1]]}
+                orderAmount={this.state.orderAmount}
+                isTransfer={this.state.isTransfer}
+                inputTransferAccount={this.state.inputTransferAccount}
+                inputTransferFromAccount={this.state.inputTransferFromAccount}
+                inputAccount={this.state.inputAccount}
+                currency={this.state.currency}
+                showCurrencyConverter={this.state.showCurrencyConverter}
                 handleChange={e => this.handleChange(e)}
-                handleButton={e => this.handleButton(e)}
-                handleNewAccount={e => this.handleNewAccount(e)}
-                inputName={this.state.inputName}
-                inputName2={this.state.inputName2}
-                inputCustomerId={this.state.inputCustomerId}
-                inputPassword={this.state.inputPassword}
-                newAccount={this.state.newAccount}
-              />
-            ) : (
-              <Login
+                handleDeposit={e => this.handleDeposit(e)}
+                handleTransfer={e => this.handleTransfer(e)}
+                handleWithdrawl={e => this.handleWithdrawl(e)}
                 handleSubmit={e => this.handleSubmit(e)}
-                handleChange={e => this.handleChange(e)}
                 handleButton={e => this.handleButton(e)}
-                handleNewAccount={e => this.handleNewAccount(e)}
-                inputName={this.state.inputName}
-                inputName2={this.state.inputName2}
-                inputPassword={this.state.inputPassword}
-                newAccount={this.state.newAccount}
+                handleLogout={e => this.handleLogout(e)}
               />
-            )}
-            Our Bank currently has {this.state.accounts.length} customers in
-            Canada
-            <ul>
-              For Testing only:
-              {this.state.accounts.map(item => (
-                <li key={item[1]}>
-                 Owner:{item[4]} Joint Owner:{item[5] ? item[5] : null}
-                  <br />
-                  Customer ID# {item[3]}<br />
-                  Account # {item[2]}<br />
-                  Password: {item[1]}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <br />
-        )}
-        <br></br>
-        {this.state.currentOwner ? (
-          <div>
-            <ShowAccount
-              accounts={this.state.accounts}
-              accountAmount={this.state.accounts[this.state.currentOwner[1]][0]}
-              accountName={this.state.currentOwner[0]}
-              thisAccount={this.state.accounts[this.state.currentOwner[1]]}
-              orderAmount={this.state.orderAmount}
-              isTransfer={this.state.isTransfer}
-              inputTransferAccount={this.state.inputTransferAccount}
-              inputTransferFromAccount={this.state.inputTransferFromAccount}
-              inputAccount={this.state.inputAccount}
-              currency={this.state.currency}
-              showCurrencyConverter={this.state.showCurrencyConverter}
-              handleChange={e => this.handleChange(e)}
-              handleDeposit={e => this.handleDeposit(e)}
-              handleTransfer={e => this.handleTransfer(e)}
-              handleWithdrawl={e => this.handleWithdrawl(e)}
-              handleSubmit={e => this.handleSubmit(e)}
-              handleButton={e => this.handleButton(e)}
-              handleLogout={e => this.handleLogout(e)}
-            />
-          </div>
-        ) : (
-          <br />
-        )}
+            </div>
+          ) : (
+            <br />
+          )}
         </center>
       </div>
     );
