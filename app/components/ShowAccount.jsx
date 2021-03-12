@@ -38,8 +38,10 @@ function ShowAccount(props) {
           onChange={props.handleChange}
         ></input>
       </div>
-      *Enter foreign amount in Currency Coverter below
       <button onClick={e => props.handleDeposit(e)}>Deposit</button>
+      <br />
+      *Enter foreign amount in Currency Coverter below
+      <br />
       <div
         style={{
           background: "skyblue",
@@ -62,6 +64,7 @@ function ShowAccount(props) {
           Canadian
         </button>
       </div>
+      <br />
       <div
         style={{
           background: "#9bc400",

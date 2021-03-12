@@ -4,7 +4,7 @@ const NewAccount = require("./NewAccount");
 
 /* the main page for the about route of this app */
 const Login = function(props) {
-  var newAccountVis = false;
+  // use state to control this var newAccountVis = false;
   return (
     <div>
       <h2>
@@ -26,7 +26,7 @@ const Login = function(props) {
             required
           />
         </label>
-        {newAccountVis ? (
+        {props.newAccount? (
           <label>
             Joint Account 2nd Name:
             <input
